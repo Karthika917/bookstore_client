@@ -1,0 +1,62 @@
+import { useEffect, useState } from 'react'
+import './App.css'
+import Home from './users/pages/Home'
+import Career from './users/pages/Career'
+import Contact from './users/pages/Contact'
+import AllBooks from './users/pages/AllBooks'
+import UserProfile from './users/pages/UserProfile'
+import ViewBook from './users/pages/ViewBook'
+
+import Dashboard from './admin/pages/Dashboard'
+import BookList from './admin/pages/BookList'
+import CareerList from './admin/pages/CareerList'
+import Settings from './admin/pages/Settings'
+
+import Auth from './pages/Auth'
+import Preloader from './components/Preloader'
+import PageNotFound from './pages/PageNotFound'
+
+import { Routes , Route } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+
+
+
+
+function App() {
+
+  const [loading,setLoading] = useState(true)
+  
+  useEffect(()=>{
+    setTimeout(()=>{
+      setLoading(false)
+    },4000)
+  },[])
+
+  return (
+    <>
+     <Routes>
+      {/* user */}
+      
+      <Route path='/' element={loading?<Preloader/>:<Home/>}/>
+      <Route path='/login' element={<Auth/>}/>
+      <Route path='/register' element={<Auth register/>}/>
+      <Route path='/career' element={<Career/>}/>
+      <Route path='/contact' element={<Contact/>}/>
+      <Route path='/books' element={<AllBooks/>}/>
+      <Route path='/books/:id/view' element={<ViewBook/>}/>
+      <Route path='/user-profile' element={<UserProfile/>}/>
+      
+       {/* admin */}
+      <Route path='/admin-dashboard' element={loading?<Preloader/>:<Dashboard/>}/>
+      <Route path='/admin-books' element={<BookList/>}/>
+      <Route path='/admin-career' element={<CareerList/>}/>
+      <Route path='/admin-settings' element={<Settings/>}/>
+
+      <Route path='/*' element={<PageNotFound/>}/>
+     </Routes>
+     <ToastContainer/>
+    </>
+  )
+}
+
+export default App
