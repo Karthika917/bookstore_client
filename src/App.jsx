@@ -15,16 +15,20 @@ import Settings from './admin/pages/Settings'
 import Auth from './pages/Auth'
 import Preloader from './components/Preloader'
 import PageNotFound from './pages/PageNotFound'
+import PaymentSuccess from './users/pages/PaymentSuccess'
+import PaymentError from './users/pages/PaymentError'
+import { useContext } from 'react'
+import { authRoleContext } from './contextApi/AuthContextApi'
 
 import { Routes , Route } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 
 
-
-
 function App() {
 
   const [loading,setLoading] = useState(true)
+  const {role} = useContext(authRoleContext)
+  console.log(role,"role")
   
   useEffect(()=>{
     setTimeout(()=>{
@@ -36,21 +40,36 @@ function App() {
     <>
      <Routes>
       {/* user */}
-      
-      <Route path='/' element={loading?<Preloader/>:<Home/>}/>
+      {/* public routes */}
       <Route path='/login' element={<Auth/>}/>
       <Route path='/register' element={<Auth register/>}/>
-      <Route path='/career' element={<Career/>}/>
+      <Route path='/' element={loading?<Preloader/>:<Home/>}/>
       <Route path='/contact' element={<Contact/>}/>
+    {
+      role === "User" &&
+      <>
+      <Route path='/career' element={<Career/>}/>
       <Route path='/books' element={<AllBooks/>}/>
       <Route path='/books/:id/view' element={<ViewBook/>}/>
       <Route path='/user-profile' element={<UserProfile/>}/>
+      <Route path='/payment-success' element={<PaymentSuccess/>}/>
+      <Route path='/payment-error' element={<PaymentError/>}/>
+      </>
+    }
       
-       {/* admin */}
+      {
+        role === "admin" &&
+        <>
+        {/* admin */}
       <Route path='/admin-dashboard' element={loading?<Preloader/>:<Dashboard/>}/>
       <Route path='/admin-books' element={<BookList/>}/>
       <Route path='/admin-career' element={<CareerList/>}/>
       <Route path='/admin-settings' element={<Settings/>}/>
+        </>
+      }
+      
+       
+
 
       <Route path='/*' element={<PageNotFound/>}/>
      </Routes>

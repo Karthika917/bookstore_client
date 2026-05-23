@@ -1,152 +1,190 @@
-import React, { useState } from 'react'
-import AdminSidebar from '../components/AdminSidebar'
-import AdminHeader from '../components/Adminheader'
-import Footer from '../../components/Footer'
 
-import { MdDelete } from "react-icons/md";
+import React, { useContext, useEffect, useState } from "react";
+import AdminHeader from "../components/AdminHeader";
+import AdminSidebar from "../components/AdminSidebar";
+import Footer from "../../components/Footer";
+import AddJobPost from "../components/AddJobPost";
+import base_url from "../../services/base_url";
+
 import { FaLocationDot } from "react-icons/fa6";
-import { IoClose } from "react-icons/io5";
-import { FaCamera } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
+
+import {adminListJobPostApi,adminDeleteJobPostApi,getAdminApplicationsApi } from "../../services/allApi"
+import { toast } from "react-toastify";
+import { careerContext } from "../../contextApi/ContextApi";
+
 
 
 function CareerList() {
+  const [jobStatus, setJobStatus] = useState(true);
+  const [applicationStatus, setApplicationStatus] = useState(false);
+  const [jobList,setjoblist]=useState([])
+  const [searchKey,setsearchKey]=useState("")
+  const {addCareerStatus}=useContext(careerContext)
+  const [applicationList,setApplicationList]=useState([])
 
-  const[jobStatus, setJobStatus] = useState(true)
-  const[applicationStatus, setApplicationStatus] = useState(false)
+  useEffect(()=>{
+    if(jobStatus){
+      getJobList()
+    }
+    if(applicationStatus){
+      getApplications()
+    }
+  },[addCareerStatus,searchKey,applicationStatus])
 
-   const [modalStatus,setModalStatus]=useState(false)
+  const getJobList=async()=>{
+    const response = await adminListJobPostApi(searchKey)
+    if(response.status===200){
+      console.log(response.data)
+      setjoblist(response.data)
+    }
+    else{
+      console.log(response)
+    }
+  }
+  
+  const deleteJobPost=async(id)=>{
+    const response=await adminDeleteJobPostApi(id)
+    if(response.status===200){
+      getJobList()
+      toast.success("Deleted Success fUlly")
+    }
+    else{
+      console.log(response)
+      toast.warning("Somrhing went wrong !!")
+    }
+  }
+
+  const getApplications=async()=>{
+    const response=await getAdminApplicationApi()
+    if(response.status===200){
+      console.log(response.data)
+      setApplicationList(response.data)
+    }
+    else{
+      console.log(response)
+    }
+  }
 
   return (
     <>
-      <AdminHeader/>
-      <div className='min-h-[60vh] md:grid grid-cols-4'>
-          <div className='col-span-1'>
-              <AdminSidebar/>
+      <AdminHeader />
+      <div className="min-h-[60vh] grid grid-cols-1 md:grid-cols-4">
+        <div className="md:col-span-1">
+          <AdminSidebar />
+        </div>
+        <div className="md:col-span-3">
+          <h1 className="text-center text-2xl my-10">Careers</h1>
+          {/* tabs */}
+          <div className="flex justify-center items-center my-5">
+            <div onClick={() =>{ setJobStatus(true); setApplicationStatus(false);}}
+              className={jobStatus? "p-3 border-l border-r border-t rounded-t-sm  border-gray-600  text-blue-500":
+                "p-3 border-b border-gray-600 cursor-pointer"}>
+              Job Post
+            </div>
+            <div onClick={() => {setJobStatus(false);setApplicationStatus(true);}}
+              className={applicationStatus?"p-3 border-l border-r border-t rounded-t-sm  border-gray-600  text-blue-500":
+              "p-3 border-b border-gray-600 cursor-pointer"}>
+              View Applicants
+            </div>
           </div>
-          <div className='col-span-3 p-5'>
-              <h1 className='text-center text-2xl my-10'>Careers</h1>
-              {/* Tabs */}
-              <div className='flex justify-center items-center my-5'>
-                <div onClick={()=>{setJobStatus(true);setApplicationStatus(false)}}
-                className={jobStatus? 'p-3 border border-r border-t rounded-t-sm border-gray-600  text-blue-600 ':
-                  'p-3 border-b border-gray-600 cursor-pointer' }>
-                  Job Post
-                </div>
-                <div onClick={()=>{setJobStatus(false);setApplicationStatus(true)}} 
-                className={applicationStatus? 'p-3 border border-r border-t rounded-t-sm border-gray-600 text-blue-600' :
-                  'p-3 border-b border-gray-600 cursor-pointer'}>
-                  View Applicants
-                </div>
+          {jobStatus && (
+            <div className="px-10 flex justify-between">
+              <div>
+                <input type="text" className="py-2 border bg-white px-2 " placeholder="Search By Title" onChange={(e)=>{setsearchKey(e.target.value)}}/>
+                {/* <button className="bg-blue-900 text-white p-2 border border-blue-900 hover:bg-white hover:text-blue-700" >
+                  Search
+                </button> */}
               </div>
-              {/* Search and Add Jobs */}
+              <AddJobPost/>
+            </div>
+          )}
+          {jobStatus && (
+            <div className="my-5 px-10 grid gap-5">
               {
-                jobStatus &&
-                 <div className='px-10 flex justify-between'>
-                <div>
-                  <input type="text" className='py-2 border bg-white px-2' placeholder='Search by Title' />
-                  <button className='bg-blue-900 text-white p-2 border hover:bg-white hover:text-blue-900'>Search</button>
-                </div>
-                <button onClick={()=>{setModalStatus(true)}} className='bg-green-800 text-white p-2 border hover:bg-white hover:text-green-800 rounded-sm'>
-                  Add Job +
-                </button>
-              </div>
+                jobList.length > 0 ?
+                <>
+                {
+                  jobList.map(job =>(
+                    <div className=" border-1 border-gray-50 shadow-2xl py-3 px-2 md:grid grid-cols-7">
+                      <div className="col-span-6">
+                        <h1 className="text-lg mb-2">{job.title}</h1>
+                        <hr />
+                        <p className="mt-5 flex gap-2 items-center"><FaLocationDot className="text-blue-800" />{job.location}</p>
+                        <p className="mt-5">Job Type:{job.jobType}</p>
+                        <p className="mt-5"><strong>Salary:</strong> {job.salary}</p>
+                        <p className="mt-5">Qualification:{job.qualification}</p>
+                        <p className="mt-5">Experience:{job.experience}</p>
+                        <p className="mt-5"><strong>Description:</strong> {job.description}</p>
+                      </div>
+                      <div className="px-4 col-span-1 flex justify-end md:flex-none  md:justify-start ">
+                        <button onClick={()=>{deleteJobPost(job?._id)}} className="h-[50px] bg-red-800 text-light p-3 float-end md:p-4 text-white  md:float-start border  border-red-800 hover:bg-white hover:text-red-600  rounded-sm  flex  md:items-center gap-1 ">
+                          Delete <FaTrash /> 
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                }
+                </>
+                :
+                <h2 className='text-center text-danger'>No Job Post Available</h2>
               }
+            </div>
+          )}
+          {applicationStatus && (
+            <div className="my-5 px-10">
               {
-                jobStatus &&
-                   <div className='my-5 px-10'>
-                {/* Job Card */}
-                <div className='border-2 border-gray-500 shadow-lg py-5 px-5 flex flex-col md:grid grid-cols-7'>
-                  <div className="col-span-6">
-                    <h1 className="text-lg mb-2">Job Title</h1>
-                    <hr/>
-                    <p className="mt-5 flex gap-2 items-center"><FaLocationDot className='text-blue-800' />Location :</p>
-                    <p className="mt-5">Job Type :</p>
-                    <p className="mt-5">Salary :</p>
-                    <p className="mt-5">Qualification :</p>
-                    <p className="mt-5">Experience:</p>
-                    <p className="mt-5">Description :</p>
-                  </div>
-                  <div className='px-10'>
-                    <button className='bg-red-700 text-white p-1 float-end md:p-3 md:float-start hover:bg-white hover:text-red-700 border hover:border-red-700 rounded-sm flex items-center'>
-                      Delete <MdDelete className='text-xl'/>
-                    </button>
-                  </div>
-                </div>
+                applicationList.length>0 ?
+                <div className="w-full overflow-x-auto">
+                <table className="min-w-[900px] w-full border border-gray-400">
+                  <thead className="bg-blue-900 text-white">
+                    <tr>
+                      <th className="p-2 border border-gray-500">Sl</th>
+                      <th className="p-2 border border-gray-500">Job Title</th>
+                      <th className="p-2 border border-gray-500">Name</th>
+                      <th className="p-2 border border-gray-500">Qualification</th>
+                      <th className="p-2 border border-gray-500">Email</th>
+                      <th className="p-2 border border-gray-500">Phone</th>
+                      <th className="p-2 border border-gray-500">Cover Letter</th>
+                      <th className="p-2 border border-gray-500">Resume</th>
+                    </tr>
+                  </thead>
 
+                  <tbody className="text-sm">
+                    {
+                      applicationList.map((application,index)=>(
+                        <tr className="text-center">
+                      <td className="p-2 border border-gray-500">{index+1}</td>
+                      <td className="p-2 border border-gray-500">{application?.jobTitle}</td>
+                      <td className="p-2 border border-gray-500">{application?.fullname}</td>
+                      <td className="p-2 border border-gray-500">{application?.qualification}</td>
+                      <td className="p-2 border border-gray-500 break-word">{application?.email}</td>
+                      <td className="p-2 border border-gray-500">{application?.phone}</td>
+                      <td className="p-2 border border-gray-500 max-w-[200px]">{application?.coverletter}</td>
+                      <td className="p-2 border border-gray-500">
+                        <a href={`${base_url}/resumes/${application?.resume}`} className="underline text-blue-600">
+                          Resume
+                        </a>
+                      </td>
+                    </tr>
+                      ))
+                    }
+                    
+                  </tbody>
+                </table>
               </div>
+              :
+              <h2 className="text-center text-xl text-red-700">No Applicants Available</h2>
               }
-           {
-            applicationStatus &&
-            <div className='my-5 px-10'>
-             <table className='w-full'>
-              <thead className='bg-blue-600 text-white'>
-                <tr>
-                  <th className='p-2 border border-gray-500'>SL.NO</th>
-                  <th className='p-2 border border-gray-500'>Job Title</th>
-                  <th className='p-2 border border-gray-500'>Name</th>
-                  <th className='p-2 border border-gray-500'>Qualification</th>
-                  <th className='p-2 border border-gray-500'>Email</th>
-                  <th className='p-2 border border-gray-500'>Phone</th>
-                  <th className='p-2 border border-gray-500'>Cover Letter</th>
-                  <th className='p-2 border border-gray-500'>Resume</th>
               
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className='p-2 border border-gray-500'>1</td>
-                  <td className='p-2 border border-gray-500'>Jnr Software Engineer</td>
-                  <td className='p-2 border border-gray-500'>Karthika P</td>
-                  <td className='p-2 border border-gray-500'>BTech</td>
-                  <td className='p-2 border border-gray-500'>karthika@gmail.com</td>
-                  <td className='p-2 border border-gray-500'>9856473527</td>
-                  <td className='p-2 border border-gray-500'></td>
-                  <td className='p-2 border border-gray-500 underline text-blue-700'>Resume</td>
-                </tr>
-              </tbody>
-             </table>
-             </div>
-           }
-           {
-                     modalStatus &&
-                     <div className="relative z-10" >
-                       <div className="bg-gray-500/75 fixed inset-0">
-                         <div className="flex justify-center items-center min-h-screen">
-                           <div className="bg-white rounded-2xl" style={{minHeight:'500px',width:'500px'}}>
-                             <div className="bg-black text-white flex justify-between items-center p-3 rounded-t-2xl">
-                               <h1 className="text-xl">Application Form</h1>
-                               <button onClick={()=>{setModalStatus(false)}}>
-                                 <IoClose />
-                               </button>
-                             </div>
-                            <div className='p-2'>
-                              <input type="text" placeholder='Job Title' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' />
-                              <input type="text" placeholder='Location' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' />
-                              <input type="text" placeholder='Job Type' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' />
-                              <input type="text" placeholder='Salary' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' />
-                              <input type="text" placeholder='Qualification' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' />
-                              <input type="text" placeholder='Experience' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' />
-                              <textarea name="" placeholder='Description' className='p-2 border bg-white placeholder-gray-600 w-full rounded-sm mb-2' id=""></textarea>
-                            </div>
-                            <div className='bg-gray-200 p-3 flex justify-end gap-3 rounded-b-2xl'>
-                             <button className='px-3 py-2 border rounded-sm bg-red-500 text-white hover:bg-white hover:border-red-500 hover:text-red-500'>
-                              RESET
-                             </button>
-                              <button className='px-3 py-2 border rounded-sm bg-green-700 text-white hover:bg-white hover:border-green-500 hover:text-green-500'>
-                              ADD
-                             </button>
-                            </div>
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   }
-
-          </div>
+            </div>
+          )}
+          
+        </div>
       </div>
-      <Footer/>
+      <Footer />
     </>
-  )
+  );
 }
 
-export default CareerList
+export default CareerList;

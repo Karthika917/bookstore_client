@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { FaAnglesLeft } from "react-icons/fa6";
@@ -7,9 +7,49 @@ import { FaCamera } from "react-icons/fa";
 
 import Header from '../components/Header'
 import Footer from '../../components/Footer'
+import { useParams } from "react-router-dom";
+import { getBookByIdApi, purchaseBookApi } from "../../services/allApi";
+import { loadStripe } from "@stripe/stripe-js";
+import { toast } from "react-toastify";
+import base_url from "../../services/base_url";
 
 function ViewBook() {
   const [modalStatus,setModalStatus]=useState(false)
+  const [bookData,setBookData] = useState({})
+  const {id} = useParams()
+  console.log(id)
+
+ useEffect(()=>{
+  if(sessionStorage.getItem('token')){
+   getBookData()
+  }
+ },[])
+
+ const getBookData = async()=>{
+  const response = await getBookByIdApi(id) 
+  console.log(response.data)
+  if(response?.status===200){
+    setBookData(response?.data)
+  }
+ }
+
+ const handlePayment = async()=>{
+  const stripe = await loadStripe("pk_test_51TPEKRCC0hrekfoBk2c0n3rk67UeZ3nIZw93tCLADRvkv2teZgAH0Gy9M92dEvBYkbPb67XO9X4zsMV54O8pQWtq00Kd8W6gPQ")
+  const response = await purchaseBookApi(bookData)
+  if(response.status===200){
+     if(response?.data.checkoutPaymentUrl){
+       //redirecting to payment gateway
+       window.location.href = response.data?.checkoutPaymentUrl
+     }
+     else{
+      toast.warning("Payment Gateway error!")
+     }
+  }
+  else{
+    toast.error("Something went wrong")
+  }
+ }
+
   return (
     <>
       <Header/>
@@ -17,15 +57,15 @@ function ViewBook() {
         <div className="border p-7 md:grid grid-cols-4">
           <div className="col-span-1">
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gVUgOqZ7aabPqsUXL5_OogJNzHBoCEUglQ&s"
+              src={bookData?.image}
               alt="book" style={{height:'100%',width:'90%'}}
             />
           </div>
           <div className="col-span-3">
             <h1 className="text-center font-bold">
-              Rich Dad Poor Dad
+              {bookData?.title}
             </h1>
-            <p className="text-center text-violet-600">Robert T. Kiyosaki</p>
+            <p className="text-center text-violet-600">{bookData?.author}</p>
 
             <div className="flex justify-end">
               <button className="text-xl text-gray-500">
@@ -34,38 +74,17 @@ function ViewBook() {
             </div>
 
             <div className="my-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <span className="font-semibold">Publisher : Penguin</span>
-                <span className="font-semibold">Language : English</span>
-                <span className="font-semibold">No.Of Pages : 336 pages</span>
+                <span className="font-semibold">Publisher :{bookData?.publisher}</span>
+                <span className="font-semibold">Language : {bookData?.language}</span>
+                <span className="font-semibold">No.Of Pages : {bookData?.noOfPages}</span>
         
-                <span className="font-semibold">Seller Mail : Penguinbooks@gmail.com</span>
-                <span className="font-semibold">Real Price : English</span>
-                <span className="font-semibold">ISBN : 9781612681139</span>
+                <span className="font-semibold">Seller Mail : {bookData?.userMail}</span>
+                <span className="font-semibold">Real Price : {bookData?.price}</span>
+                <span className="font-semibold">ISBN : {bookData?.isbn}</span>
             </div>
 
               <p className="my-5 text-justify ">
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Veniam
-                earum iusto laboriosam odit totam, cum minima sunt dolorum
-                laudantium officiis debitis excepturi pariatur voluptate commodi
-                corrupti deleniti? Explicabo, expedita suscipit. Lorem ipsum
-                dolor sit amet consectetur adipisicing elit. Esse voluptate, qui
-                porro dolor enim dicta numquam laudantium debitis labore,
-                ducimus repellendus illo ab ipsam magni pariatur eum omnis
-                tempora facere! Lorem ipsum dolor, sit amet consectetur
-                adipisicing elit. Magni vero fuga quis ipsam, cum vel optio
-                tenetur quos nulla, voluptates repellendus aspernatur nobis,
-                blanditiis consequatur. Deleniti maiores quaerat voluptatibus
-                nemo! Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Omnis vero temporibus est esse sequi neque vitae placeat,
-                dolorum debitis modi sed quidem dicta consequuntur porro
-                expedita quibusdam dignissimos harum maxime. Lorem ipsum dolor
-                sit amet consectetur adipisicing elit. Corrupti nemo debitis
-                optio, perferendis, eaque rem in ducimus facere, perspiciatis
-                quas qui ab nostrum dignissimos? Magni error temporibus rem
-                eveniet totam. Lorem, ipsum dolor sit amet consectetur
-                adipisicing elit. Nesciunt, numquam. Doloremque distinctio
-                asperiores recusandae qui, a fugit soluta voluptatum dicta odit
-                sint quis ipsa dolorum nesciunt officia iure unde adipisci!
+               {bookData?.abstract}
               </p>
 
             <div className="flex md:justify-end justify-center gap-5">
@@ -73,8 +92,8 @@ function ViewBook() {
               <FaAnglesLeft /> Back
               </button>
 
-              <button className="bg-green-500/95 text-white p-2 rounded-sm">
-              Buy <span>15$</span>
+              <button className="bg-green-500/95 text-white p-2 rounded-sm" onClick={handlePayment}>
+              Buy <span>$ {bookData?.discountPrice}</span>
               </button>
             </div>
           </div>
@@ -97,11 +116,19 @@ function ViewBook() {
                   </h2>
                   {/* Images */}
                   <div className="flex gap-5 overflow-x-auto"> 
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gVUgOqZ7aabPqsUXL5_OogJNzHBoCEUglQ&s" alt="" width={'300px'}/>
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gVUgOqZ7aabPqsUXL5_OogJNzHBoCEUglQ&s" alt="" width={'300px'}/>
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gVUgOqZ7aabPqsUXL5_OogJNzHBoCEUglQ&s" alt="" width={'300px'}/>
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gVUgOqZ7aabPqsUXL5_OogJNzHBoCEUglQ&s" alt="" width={'300px'}/>
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gVUgOqZ7aabPqsUXL5_OogJNzHBoCEUglQ&s" alt="" width={'300px'}/>
+                  {
+                    bookData?.uploadImg?.length > 0 ?
+                    <>
+                    {
+                    bookData?.uploadImg?.map(item=>(
+                      <img src={`${base_url}/uploadImg/${item}`} alt="sample img" width={'300px'} />
+                    ))
+                    }
+                    </>
+                    :
+                    <h2 className="text-center text-red-600 text-xl">No images</h2>
+                  }
+                  
                   </div>
                 </div>
               </div>

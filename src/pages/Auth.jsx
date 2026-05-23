@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { FaRegUserCircle } from "react-icons/fa";
 import { Link } from 'react-router-dom';
-import {signinApi, signupApi } from '../services/allApi'
+import {googleSigninApi, signinApi, signupApi } from '../services/allApi'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { GoogleLogin } from '@react-oauth/google';
-
+import {jwtDecode} from 'jwt-decode'
+import { useContext } from 'react';
+import { authRoleContext } from '../contextApi/AuthContextApi';
 
 
 function Auth({register}) {
@@ -16,6 +18,8 @@ function Auth({register}) {
     username:"",email:"",password:""
   })
   
+  const {setRole} = useContext(authRoleContext)
+
   const handleRegister = async()=>{
     console.log(user)
     const {username,email,password} = user
@@ -49,14 +53,46 @@ function Auth({register}) {
     if(response.status===200){
       sessionStorage.setItem('token',response?.data?.token)
       sessionStorage.setItem('uname',response?.data?.username)
+      sessionStorage.setItem('dp',response?.data?.profile)
+      sessionStorage.setItem('bio',response?.data?.bio)
+      sessionStorage.setItem('role',response?.data?.role)
+      setRole(response?.data?.role)
       toast.success("Signin successfull!")
-      setUser({email:"",password:""})
-      navigate('/')
+      setUser({username:"",email:"",password:""})
+      if(response?.data?.role==="admin"){
+        navigate('/admin-dashboard')
+      }
+      else{
+        navigate('/')
+      }
+     
     }
     else{
       toast.error(response?.data)
     }
    }
+  }
+
+  const handleGoogleLogin=async(credential)=>{
+    // console.log(credential)
+    const decode_value=jwtDecode(credential?.credential)
+    console.log(decode_value)
+    const data ={username:decode_value.given_name,email:decode_value.email,profile:decode_value.picture}
+    console.log(data)
+    const response=await googleSigninApi(data)
+    console.log(response)
+    if(response.status===200){
+      toast.success("Signin successfull")
+      sessionStorage.setItem('token',response?.data?.token)
+      sessionStorage.setItem('uname',response?.data?.username)
+      sessionStorage.setItem('dp',response?.data?.profile)
+      sessionStorage.setItem('bio',response?.data?.bio)
+      setRole(response?.data?.role)
+      navigate('/')
+    }
+    else{
+      toast.error("Signin failed!!")
+    }
   }
   return (
    <>
@@ -87,15 +123,18 @@ function Auth({register}) {
               <>
               <button className='w-full bg-green-700 py-2 rounded-sm text-white font-semibold mt-4' onClick={handleLogin}>Login</button>
               <p className='my-5 border-b border-white'></p>
-              <GoogleLogin
+              <div className='w-full flex justify-center'>
+                <GoogleLogin
                 onSuccess={credentialResponse => {
-                console.log(credentialResponse);
+                handleGoogleLogin(credentialResponse)
                  }}
                 onError={() => {
                 console.log('Login Failed');
                 }}
               useOneTap
                />;
+              </div>
+              
               </>
           }
          

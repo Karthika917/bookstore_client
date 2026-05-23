@@ -6,27 +6,41 @@ import { RiTwitterXLine } from "react-icons/ri";
 import { FaFacebookF } from "react-icons/fa";
 import { FaUser } from "react-icons/fa";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { toast } from 'react-toastify';
+import base_url from '../../services/base_url';
 
+import { profileContext } from '../../contextApi/ContextApi';
+import { useContext } from 'react';
+import { authRoleContext } from '../../contextApi/AuthContextApi';
 
 function Header() {
 
   const [menuState,setMenuState] = useState(false)
   const [username,setUsername] = useState("")
   const [dropdownStatus,setDropdownStatus] = useState(false)
+  const [profilePicture,setProfilePicture] =useState("")
+  const {profileStatus,setProfileStatus} = useContext(profileContext)
   const navigate = useNavigate()
+  const {setRole} = useContext(authRoleContext)
 
   useEffect(()=>{
      if(sessionStorage.getItem('uname')){
      setUsername(sessionStorage.getItem('uname'))
+     setProfilePicture(sessionStorage.getItem('dp'))
      }
      else{
       setUsername("")
      }
-  },[])
+  },[profileStatus])
 
   const signout=()=>{
     sessionStorage.clear()
-    navigate('/')
+    setUsername("")
+    setProfilePicture("")
+    setDropdownStatus(false)
+    setRole("")
+    toast.success("Logout successfull")
+    navigate('/login')
   }
 
   return (
@@ -49,15 +63,16 @@ function Header() {
           {/* Login button */}
           {
               username ?
-              <div className='flex-relative'>
+              <div className='relative'>
                 <button onClick={()=>(setDropdownStatus(!dropdownStatus))} className='px-2 py-1 border-3 rounded-lg flex gap-3 items-center'>
-                  <img src="https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png" alt="profilelogo"
+                  <img src={profilePicture?(profilePicture.startsWith("https://lh3.googleusercontent.com")?profilePicture:`${base_url}/uploadImg/${profilePicture}`):
+                  "https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png"} alt="profilelogo"
                    width={'55px'}/>
                    {username}
                 </button>
                 {
                   dropdownStatus &&
-                  <ul className='border text-sm absolute right-0 z-10 rounded-md bg-white-bottom-15'>
+                  <ul className='border text-sm absolute right-0 z-10 rounded-md bg-white'>
                   <li className='border-b px-2 py-1'><Link to={'/user-profile'}>profile</Link></li>
                   <li className='px-2 py-1'>
                   <button className='text-red-600 cursor-pointer' onClick={signout} >Sign Out</button></li>
@@ -84,12 +99,32 @@ function Header() {
            <GiHamburgerMenu />
           </button>
           {/* Login Button */}
-          <Link to={'/login'}>
-            <button  className='flex items-center border border-white  rounded px-2 py-2 hover:bg-black text-white'>
-              <FaUser/>
-              Login
-            </button>
-          </Link>
+          {
+            username ?
+            <div className='relative'>
+              <button onClick={()=>(setDropdownStatus(!dropdownStatus))} className='flex items-center gap-2 border border-white rounded px-2 py-1 text-sm'>
+                <img src={profilePicture?(profilePicture.startsWith("https://lh3.googleusercontent.com")?profilePicture:`${base_url}/uploadImg/${profilePicture}`):
+                "https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png"} alt="profilelogo"
+                 width={'35px'} className='rounded-full'/>
+                 <span>{username}</span>
+              </button>
+              {
+                dropdownStatus &&
+                <ul className='border text-sm absolute right-0 z-10 rounded-md bg-white text-black mt-1'>
+                <li className='border-b px-2 py-1'><Link to={'/user-profile'}>profile</Link></li>
+                <li className='px-2 py-1'>
+                <button className='text-red-600 cursor-pointer' onClick={signout} >Sign Out</button></li>
+              </ul>
+               }
+            </div>
+            :
+            <Link to={'/login'}>
+              <button className='flex items-center gap-1 border border-white rounded px-2 py-1 hover:bg-black text-white text-sm md:text-base'>
+                <FaUser size={16} className='md:text-[25px]'/>
+                Login
+              </button>
+            </Link>
+          }
         </div>
         <ul className={menuState?'flex flex-col md:flex-row md:gap-2':'md:flex justify-center items-center gap-2 hidden'}>
           <Link to={'/'}>Home</Link>

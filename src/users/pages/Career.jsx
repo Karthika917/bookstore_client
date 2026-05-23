@@ -1,52 +1,156 @@
-import React,{useState} from 'react'
+import React, { useEffect } from 'react'
+import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import Header from '../components/Header'
 import Footer from '../../components/Footer'
+
 import { FaLocationDot } from "react-icons/fa6";
-import { GrShare } from "react-icons/gr";
+import { RiShareForward2Fill } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
+import { listJobPostApi } from '../../services/allApi';
+import { toast } from 'react-toastify';
+import { useRef } from 'react';
+
+
 
 function Career() {
 
-  const[modalStatus,setModalStatus]=useState(false)
+   const [modalStatus, setModalStatus] = useState(false);
+    const [careerList,setCareerlist]=useState([])
+    const [loginStatus,setLoginStatus]=useState("")
+    const [searchKey,setSearchKey]=useState("")  
+    const[careerData,setCareerData] = useState({
+      fullname:"",qualification:"",email:"",phone:"",coverletter:"",resume:"",jobId:"",jobTitle:""
+    })
+    const fileInputRef=useRef()
+    
+    useEffect(()=>{
+      if(sessionStorage.getItem('token')){
+        getCareerList()
+        setLoginStatus(sessionStorage.getItem('token'))
+      }
+      else{
+        setLoginStatus("")
+      }
+    },[searchKey])
+
+    const getCareerList=async()=>{
+      const response =await listJobPostApi(searchKey)
+      if(response.status===200){
+        console.log(response.data)
+        setCareerlist(response.data)
+      }
+      else{
+        console.log(response)
+      }
+    }
+
+
+  const openModal = (id,title)=>{
+      setModalStatus(true)
+      setCareerData({...careerData,jobId:id,jobTitle:title})
+  }
+  
+  const handleReset = ()=>{
+    setCareerData({
+      fullname:"",qualification:"",email:"",phone:"",coverletter:"",resume:""
+    })
+    fileInputRef.current.value=""
+  }
+
+    
+  const handleApplyJobs=async()=>{
+    console.log(careerData)
+    const {fullname,qualification,email,phone,coverletter,resume,jobId,jobTitle}= careerData
+    if(!fullname || !qualification || !email || !phone || !coverletter || !resume || !jobId || !jobTitle){
+       toast.warning("Enter valid inputs")
+    }
+    else{
+      const formData = new FormData()
+      for(let i in careerData){
+        formData.append(i,careerData[i])
+      }
+      const response = await listJobPostApi(formData)
+      if(response.status===200){
+        toast.success("Application send")
+        handleReset()
+        setModalStatus(false)
+      }
+      else{
+        toast.error("Something went wrong")
+        console.log(response)
+        if(response.data){
+             toast.info("response.data")
+        }
+      }
+    }
+  }
+
+   
   return (
     <>
-     <Header/>
-       <div className='min-h-[60vh] px-5 py-10 md:px-40'>
-        {/* Intro */}
-       <h1 className='text-4xl text-center'>Career</h1>
-       <p className='text-justify my-5'>
-        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Molestias, sunt? Necessitatibus sit, voluptatibus architecto optio veniam impedit totam molestias id asperiores consequuntur alias, rem aliquid, et nam! Natus, provident atque?
-        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Nulla incidunt praesentium aperiam dicta, quo provident amet aspernatur fuga sunt doloribus harum eligendi laborum, alias magnam. Voluptas esse sed nesciunt molestias.
-       </p>
-       {/* Current Openings */}
-       <div className='w-full mt-10'>
-        <h1 className='text-2xl'>Currrent openings</h1>
-        <div className='flex justify-center my-5'>
-          <input type="text" className='border py-2' placeholder='Job Title' />
-          <button className='bg-green-700 text-white p-2'>Search</button>
-        </div>
-        <div className='w-full'>
-          <div className='border-2 border-gray-500 shadow-lg py-3 px-2 md:grid grid-cols-7  '>
-             <div className='col-span-6'>
-              <h1 className='text-lg mb-2'>Job Title</h1>
-                <hr />
-                <p className='mt-5 flex gap-2 items-center'><FaLocationDot  className='text-blue-800'/></p>
-                <p className='mt-5'>Job Type:</p>
-                <p className='mt-5'>Salary:</p>
-                <p className='mt-5'>Qualification:</p>
-                <p className='mt-5'>Experience:</p>
-                <p className='mt-5'>Description:</p>
-            
-
-             </div>
-             <div className='px-4 '>
-             <button onClick={()=>{setModalStatus(true)}} className='bg-blue-800 p-4 text-white float-end rounded-sm flex items-center gap-1 '>
-              Apply <GrShare />
-             </button>
-
-
-             </div>
-             { modalStatus && 
+    <Header/>
+      <div className='min-h-[60vh] px-5 py-10 md:px-40'>
+        {/* imtro */}
+        <h1 className="text-5xl text-center">Career</h1>
+        <p className="text-justify my-5">
+          Your career is more than just a job — it’s a journey of growth, learning, and self-discovery. Choosing the right career path allows
+          you to explore your passions, develop valuable skills, and achieve both personal and professional goals. With the right 
+          opportunities and continuous effort, you can build a future that reflects your ambitions and strengths. Every experience, 
+          whether success or failure, contributes to shaping your career and guiding you toward long-term success and fulfillment.
+        </p>
+        {/* Current openings */}
+        <div className="w-full mt-10">
+          <h1 className="text-3xl">Current Openings</h1>
+          
+          {/* Job list */}
+          {
+            loginStatus ?
+            <div className='w-full'>
+              <div className='flex justify-center my-5'>
+                <input onChange={(e)=>{setSearchKey(e.target.value)}} type="text" className='border py-2 px-2' placeholder='Job Title' />
+              </div>
+              {
+                careerList.length>0 ?
+                <>
+                  {
+                    careerList.map(career=>(
+                      <div className=' shadow-lg py-3 px-2 md:grid grid-cols-7 mb-4'>
+                <div className="col-span-6">
+                  <h1 className="text-lg mb-2">{career?.title}</h1>
+                  <hr/>
+                  <p className="mt-5 flex gap-2 items-center"><FaLocationDot className='text-blue-800' />Location :{career?.location}</p>
+                  <p className="mt-5">Job Type {career?.jobType}</p>
+                  <p className="mt-5">Salary : {career?.salary}</p>
+                  <p className="mt-5">Qualification :{career?.qualification}</p>
+                  <p className="mt-5">Experience:{career?.experience}</p>
+                  <p className="mt-5">Description :{career?.description}</p>
+                </div>
+                <div className='px-10'>
+                  <button className='bg-blue-800 text-white px-3 py-3 rounded-sm flex items-center' onClick={()=>openModal(career?._id,career?.title)}>
+                    Apply 
+                    <RiShareForward2Fill />
+                  </button>
+                </div>
+              </div>
+                    ))
+                  }
+                </>
+                :
+                <h2 className="text-center text-red-600 text-xl">NoJobs posted yet</h2>
+              }
+          </div>
+          :
+          <div className="min-h-[60vh] py-10 px-5 flex flex-col justify-center items-center">
+            <img src="./logintry.jpg" alt="logn_req_img" className="w-[30%]"/>
+            <p className="text-xl ">Please{" "}  
+              <Link to={"/login"} className="text-blue-500 underline"> Login</Link>
+              To View Career Openings
+            </p>
+          </div>
+          }
+          
+          {modalStatus && (
             <div className="relative z-10" >
               <div className="bg-gray-500/75 fixed inset-0">
                 <div className="flex justify-center items-center min-h-screen">
@@ -54,39 +158,35 @@ function Career() {
                     <div className="bg-black text-white flex justify-between items-center p-3 rounded-t-2xl">
                       <h1 className="text-2xl font-bold">Application Form</h1>
                       <button onClick={()=>setModalStatus(false)}>
-                        <IoClose className='text-2xl'/>
+                        <IoClose />
                       </button>
                     </div>
                     <div className="p-5">
                       <div className='grid grid-cols-2 gap-4 mb-5'>
-                        <input type="text" placeholder="Full Name" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
-                        <input type="text" placeholder="Qualification" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
-                        <input type="text" placeholder="Email Id" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
-                        <input type="text" placeholder="Phone Number" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
+                        <input type="text" value={careerData.fullname} onChange={(e)=>{setCareerData({...careerData,fullname:e.target.value})}} placeholder="Full Name" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
+                        <input type="text" value={careerData.qualification} onChange={(e)=>{setCareerData({...careerData,qualification:e.target.value})}} placeholder="Qualification" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
+                        <input type="text" value={careerData.email} onChange={(e)=>{setCareerData({...careerData,email:e.target.value})}} placeholder="Email Id" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
+                        <input type="text" value={careerData.phone} onChange={(e)=>{setCareerData({...careerData,phone:e.target.value})}} placeholder="Phone Number" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full mb-2"/>
                       </div>
-                      <textarea name="" placeholder="Cover Letter" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full " id=""></textarea>
+                      <textarea name="" value={careerData.coverletter} onChange={(e)=>{setCareerData({...careerData,coverletter:e.target.value})}}  placeholder="Cover Letter" className="p-2 border bg-white placeholder-gray-600 rounded-sm w-full " id=""></textarea>
                       <div className='my-3'>
-                        <label htmlFor="" className='text-lg justify-end text-gray-600'>Resume</label>
-                        <input type="file" name='' id='' className='border w-full border-gray-500 cursor-pointer file:bg-gray-400 file:p-1'/>
+                        <label htmlFor=""className='text-lg justify-end text-gray-600'>Resume</label>
+                        <input ref={fileInputRef} type="file"  onChange={(e)=>{setCareerData({...careerData,resume:e.target.files[0]})}}  name='' id='' className='border w-full border-gray-500 cursor-pointer file:bg-gray-400 file:p-1 cursor-pointer'/>
                       </div>
                     </div>
                     <div className="bg-gray p-3 flex justify-end gap-2 rounded-b-2xl">
-                      <button className="p-2 border rounded-sm bg-red-500 text-white hover:bg-white hover:border-red-600 hover:text-red-500">Reset</button>
-                      <button className="p-2 border rounded-sm bg-green-700 text-white hover:bg-white hover:border-green-600 hover:text-green-500">Add</button>
+                      <button className="p-2 border rounded-sm bg-red-500 text-white hover:bg-white hover:border-red-600 hover:text-red-500" onClick={handleReset}>Reset</button>
+                      <button className="p-2 border rounded-sm bg-green-700 text-white hover:bg-white hover:border-green-600 hover:text-green-500" onClick={handleApplyJobs}>Add</button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          }
-          </div>
+          )}
         </div>
-        
-       </div>
-       </div>
-       <Footer/>
+      </div>
+    <Footer/>
     </>
   )
 }
-
 export default Career

@@ -1,12 +1,61 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import Footer from '../../components/Footer'
 import AdminHeader from '../components/AdminHeader'
 import AdminSidebar from '../components/AdminSidebar'
+import { adminApproveBookApi, getAdminAllBooksApi, getAdminAllUsersApi } from '../../services/allApi'
+import base_url from '../../services/base_url'
+import { toast, ToastContainer } from 'react-toastify'
+
 function BookList() {
 
   const[bookStatus,setBookStatus]=useState(true)
   const[userStatus,setUserStatus]=useState(false)
+  const[bookList,setBookList] = useState([])
+  const[userList,setUserList] = useState([])
+
+  useEffect(()=>{
+    if(bookStatus){
+        getBookList()
+    }
+    if(userStatus){
+      getUserList()
+    }
+  },[userStatus])
+
+  const getBookList = async()=>{
+    const response = await getAdminAllBooksApi()
+    if(response.status===200){
+      console.log(response.data)
+       setBookList(response.data)
+    }
+    else{
+      console.log(response)
+    }
+  }
+
+  const getUserList = async()=>{
+    const response = await getAdminAllUsersApi()
+    if(response.status===200){
+      console.log(response.data)
+       setUserList(response.data)
+    }
+    else{
+      console.log(response)
+    }
+  }
+
+  const handleBookUpdate = async(id)=>{
+    const response = await adminApproveBookApi(id)
+    if(response.status===200){
+     toast.success("Book Approved")
+      getBookList()
+    }
+    else{
+      console.log(response)
+      toast.error("Something went wrong")
+    }
+  }
   return (
     <>
       <AdminHeader/>
@@ -31,94 +80,71 @@ function BookList() {
             {
               bookStatus &&
               <div className='px-10 py-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-center'>
-                {/* Card */}
-                <div className="p-2 w-full max-w-[16rem] shadow-xl text-center rounded-lg">
-                  <img src="./Ikigai.jpg" alt="" 
+                {
+                  bookList.length>0 ?
+                  <>
+                  {
+                    bookList.map(item=>(
+                   <div className="p-2 w-full max-w-[16rem] shadow-xl text-center rounded-lg">
+                  <img src={item?.image} alt="" 
                     style={{height:"300px" , width:'100%'}}/>
-                  <h2 className="text-2xl">Ikigai</h2>
-                  <p>Lorem........</p>
-                  <h4 className='text-lg text-blue-500'>& 40</h4>
-                  <button className='bg-green-500 text-white border border-green-600 w-full py-2 hover:bg-white hover:text-green-700'>Approve</button>
+                  <h2 className="text-2xl">{item?.title}</h2>
+                  <p>{item?.abstract.slice(0,10)}......</p>
+                  <h4 className='text-lg text-blue-500'>&#8377;{item?.price}</h4>
+                  {
+                    item?.status== "pending" ?
+                     <button onClick={()=>{handleBookUpdate(item._id)}} className='bg-green-500 text-white border border-green-600 w-full py-2 hover:bg-white hover:text-green-700'>Approve</button>
+                     :
+                     <button className='text-green-600 text-center'>Approved</button>
+                  }
+                 
                 </div>
-                <div className="p-2 w-full max-w-[16rem] shadow-xl text-center rounded-lg">
-                  <img src="./AtomicHabits.jpg" alt="" 
-                  style={{height:"300px" , width:'100%'}}/>
-                  <h2 className="text-2xl">Atomic Habits</h2>
-                  <p>Lorem........</p>
-                  <h4 className='text-lg text-blue-500'>& 90</h4>
-                  <button className='bg-green-500 text-white border border-green-600 w-full py-2 hover:bg-white hover:text-green-700'>Approve</button>
-                </div>
-                <div className="p-2 w-full max-w-[16rem] shadow-xl text-center rounded-lg">
-                  <img src="./richdad.jpg" alt="" 
-                  style={{height:"300px" , width:'100%'}}/>
-                  <h2 className="text-2xl">Rich Dad Poor Dad</h2>
-                  <p>Lorem........</p>
-                  <h4 className='text-lg text-blue-500'>& 50</h4>
-                  <button className='bg-green-500 text-white border border-green-600 w-full py-2 hover:bg-white hover:text-green-700'>Approve</button>
-                </div>
-                <div className="p-2 w-full max-w-[16rem] shadow-xl text-center rounded-lg">
-                  <img src="./Think.jpg" alt="" 
-                  style={{height:"300px" , width:'100%'}}/>
-                  <h2 className="text-2xl">Think And Grow Rich</h2>
-                  <p>Lorem........</p>
-                  <h4 className='text-lg text-blue-500'>& 60</h4>
-                  <button className='bg-green-500 text-white border border-green-600 w-full py-2 hover:bg-white hover:text-green-700'>Approve</button>
-                </div>
-              </div>
+                    ))
+                  }
+                  
+                
+                </>
+                
+                :
+                <h2 className='text-red-600'>No Books available</h2>
+                 
+
+                }
+             </div>
+                
             }
             {
               userStatus &&
               <div className='px-10 py-5 flex flex-wrap justify-around gap-5'>
                 {/* user cards */}
-                <div className='max-w-[18rem] border bg-gray-100 py-2 px-4'>
-                  <h1 className="text-center my-4 text-amber-900">ID : vhehg152dd</h1>
+                {
+                  userList.length > 0 ?
+                  <>
+                  {
+                    userList.map(item=>(
+                    <div className='max-w-[18rem] border bg-gray-100 py-2 px-4'>
+                  <h1 className="text-center my-4 text-amber-900">ID : {item?._id}</h1>
                   <div className='grid grid-cols-3 gap-3'>
                     <div className='col-span-1'>
-                      <img src="https://www.nicepng.com/png/detail/202-2024580_png-file-profile-icon-vector-png.png" alt=""
+                      <img src={item.profile?(item.profile.startsWith("https://lh3.googleusercontent.com")?item.profile:`${base_url}/uploadImg/${item.profile}`):
+                  "https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Image.png"} alt=""
                         width={'150px'} />
                     </div>
                     <div className='col-span-2 flex flex-col justify-center'>
-                      <h2 className="text-blue-600 text-lg">Username</h2>
-                      <p className='text-green-700'>username@gmail.com</p>
-                    </div>
-                  </div>
-                </div><div className='max-w-[18rem] border bg-gray-100 py-2 px-4'>
-                  <h1 className="text-center my-4 text-amber-900">ID : vhehg152dd</h1>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div className='col-span-1'>
-                      <img src="https://www.nicepng.com/png/detail/202-2024580_png-file-profile-icon-vector-png.png" alt=""
-                        width={'150px'} />
-                    </div>
-                    <div className='col-span-2 flex flex-col justify-center'>
-                      <h2 className="text-blue-600 text-lg">Username</h2>
-                      <p className='text-green-700'>username@gmail.com</p>
-                    </div>
-                  </div>
-                </div><div className='max-w-[18rem] border bg-gray-100 py-2 px-4'>
-                  <h1 className="text-center my-4 text-amber-900">ID : vhehg152dd</h1>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div className='col-span-1'>
-                      <img src="https://www.nicepng.com/png/detail/202-2024580_png-file-profile-icon-vector-png.png" alt=""
-                        width={'150px'} />
-                    </div>
-                    <div className='col-span-2 flex flex-col justify-center'>
-                      <h2 className="text-blue-600 text-lg">Username</h2>
-                      <p className='text-green-700'>username@gmail.com</p>
-                    </div>
-                  </div>
-                </div><div className='max-w-[18rem] border bg-gray-100 py-2 px-4'>
-                  <h1 className="text-center my-4 text-amber-900">ID : vhehg152dd</h1>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div className='col-span-1'>
-                      <img src="https://www.nicepng.com/png/detail/202-2024580_png-file-profile-icon-vector-png.png" alt=""
-                        width={'150px'} />
-                    </div>
-                    <div className='col-span-2 flex flex-col justify-center'>
-                      <h2 className="text-blue-600 text-lg">Username</h2>
-                      <p className='text-green-700'>username@gmail.com</p>
+                      <h2 className="text-blue-600 text-lg">{item?.username}</h2>
+                      <p className='text-green-700'>{item?.email}</p>
                     </div>
                   </div>
                 </div>
+                    ))
+                  }
+                  
+                  </>
+                  :
+                  <h2>No users available</h2>
+                }
+                
+               
               </div>
             }
           </div>
