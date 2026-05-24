@@ -70,10 +70,10 @@ function Home() {
               <p className='text-red-500'>{error}</p>
             </div>
           ) : (
-            <div className='w-full mt-5 md:flex justify-center gap-2'>
+            <div className='w-full mt-5 flex flex-wrap justify-center gap-2'>
               {latestBooks.length > 0 ? (
                 latestBooks.map((book) => (
-                  <div key={book._id} className='p-1 w-[70%] md:w-[16rem] shadow-xl text-center'>
+                  <div key={book._id} className='p-1 w-[70%] sm:w-[45%] md:w-[16rem] shadow-xl text-center'>
                     <img
                       src={book.image || '/book1.jpg'}  // adjust field name if different
                       alt={book.title}
@@ -120,21 +120,69 @@ function Home() {
           className='items-center w-full' style={{height:'450px'}}/>
         </div>
       </section>
+
       {/* Testimonials */}
-      <section className="text-center my-20 px-5 md:px-40">
-        <h1 className="text-lg">Testimonials</h1>
-        <h1 className="text-3xl">See What Others Are Sayings</h1>
-        <div className="flex flex-col items-center my-5">
-          <img src="./john.webp" alt="testimonials" 
-          className='rounded-full mt-5' style={{height:'300px' , width:'300px'}}/>
-          <h3>John Luther</h3>
+      <section className="my-20 px-5 md:px-40">
+        <h1 className="text-lg text-center">Testimonials</h1>
+        <h1 className="text-3xl text-center mb-12">See What Others Are Saying</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Testimonial 1 */}
+          <div className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center">
+              <img 
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRP2DLmYZo2GBfZN41zHJev2tOF2Ohe6wt9bw&s" 
+                alt="John Luther" 
+                className='rounded-full mb-4' 
+                style={{height:'100px', width:'100px', objectFit:'cover'}}
+              />
+              <h3 className="text-lg font-semibold">John Luther</h3>
+              <p className="text-sm text-gray-500 mb-4">Book Enthusiast</p>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              This bookstore offers an excellent collection of books across various genres. The user-friendly interface and affordable prices make it easy to find exactly what I'm looking for. Fast delivery and quality service!
+            </p>
+          </div>
+
+          {/* Testimonial 2 */}
+          <div className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center">
+              <img 
+                src="https://humusgroup.com/wp-content/uploads/2017/02/testimonial-woman.png" 
+                alt="Sarah Mitchell" 
+                className='rounded-full mb-4' 
+                style={{height:'100px', width:'100px', objectFit:'cover'}}
+              />
+              <h3 className="text-lg font-semibold">Sarah Mitchell</h3>
+              <p className="text-sm text-gray-500 mb-4">Student</p>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              As a student, I appreciate the diverse selection and competitive pricing. The smooth ordering process and reliable delivery make this my go-to platform for all my reading needs.
+            </p>
+          </div>
+
+          {/* Testimonial 3 */}
+          <div className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center">
+              <img 
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrnXH-lm5FInc9lYQFM7PAbZ0Cq6yuVuqSTQ&s" 
+                alt="Michael Chen" 
+                className='rounded-full mb-4' 
+                style={{height:'100px', width:'100px', objectFit:'cover'}}
+              />
+              <h3 className="text-lg font-semibold">Michael Chen</h3>
+              <p className="text-sm text-gray-500 mb-4">Professional Reader</p>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Exceptional service! The collection is curated well, and the platform's organization makes browsing effortless. I've recommended this bookstore to all my colleagues.
+            </p>
+          </div>
+
+         
+
+         
+         
         </div>
-        <p className="text-justify">
-          This bookstore offers an excellent collection of books across various genres, making it easy for readers to 
-          find exactly what they’re looking for.With a user-friendly interface, affordable prices, and smooth ordering process, 
-          customers can enjoy a convenient and satisfying shopping experience. Fast delivery and quality service make this platform a 
-          reliable choice for students,professionals, and book lovers alike.
-        </p>
       </section>
       </>
       <Footer />
