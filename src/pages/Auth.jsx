@@ -87,6 +87,7 @@ function Auth({register}) {
       sessionStorage.setItem('uname',response?.data?.username)
       sessionStorage.setItem('dp',response?.data?.profile)
       sessionStorage.setItem('bio',response?.data?.bio)
+      sessionStorage.setItem('role', response?.data?.role) 
       setRole(response?.data?.role)
       navigate('/')
     }

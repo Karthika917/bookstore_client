@@ -46,7 +46,7 @@ function App() {
       <Route path='/' element={loading?<Preloader/>:<Home/>}/>
       <Route path='/contact' element={<Contact/>}/>
     {
-      role === "User" &&
+      role === "user" &&
       <>
       <Route path='/career' element={<Career/>}/>
       <Route path='/books' element={<AllBooks/>}/>
